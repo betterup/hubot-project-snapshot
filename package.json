@@ -1,6 +1,6 @@
 {
   "name": "hubot-waffle-board",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Hubot plugin for daily project progress reports",
   "main": "index.js",
   "scripts": {

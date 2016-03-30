@@ -61,7 +61,7 @@ module.exports = function(robot) {
   function inProgressReport(orgProject, callback) {
     github.get('/repos/' + orgProject + '/issues?filter=all&labels=' + wipLabel + '&sort=updated&direction=asc', function(issues) {
       var issuesWithoutPullRequests = rejectPullRequests(issues);
-      printIssues('in progress', issuesWithoutPullRequests, orgProject, callback);
+      printIssues('in progress issues', issuesWithoutPullRequests, orgProject, callback);
     });
   }
 
@@ -69,7 +69,7 @@ module.exports = function(robot) {
   function inReviewReport(orgProject, callback) {
     github.get('/repos/' + orgProject + '/issues?filter=all&labels=' + reviewLabel + '&sort=updated&direction=asc', function(issues) {
       var issuesWithoutPullRequests = rejectPullRequests(issues);
-      printIssues('in review', issuesWithoutPullRequests, orgProject, callback);
+      printIssues('issues in review', issuesWithoutPullRequests, orgProject, callback);
     });
   }
 
@@ -82,9 +82,9 @@ module.exports = function(robot) {
 
   function printIssues(label, issues, orgProject, callback) {
     if (issues.length === 0) {
-      callback('No ' + label + ' issues were found for ' + orgProject);
+      callback('No ' + label + ' were found for ' + orgProject);
     } else {
-      var message = 'These ' + label + ' issues were found for ' + orgProject + ':';
+      var message = 'These ' + label + ' were found for ' + orgProject + ':';
       issues.forEach(function(issue) {
         message += "\n* " + issueToString(issue);
       });
@@ -97,7 +97,7 @@ module.exports = function(robot) {
   function recentClosedIssuesReport(orgProject, callback) {
     github.get('/repos/' + orgProject + '/issues?filter=all&state=closed&sort=updated&direction=desc&per_page=10&since=' + lastWeek().toISOString(), function(issues) {
       var issuesWithoutPullRequests = rejectPullRequests(issues);
-      printIssues('recently closed', issuesWithoutPullRequests, orgProject, callback);
+      printIssues('recently closed issues', issuesWithoutPullRequests, orgProject, callback);
     });
   }
 

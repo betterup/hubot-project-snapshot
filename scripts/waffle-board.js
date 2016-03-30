@@ -40,7 +40,7 @@ module.exports = function(robot) {
 
   // see https://developer.github.com/v3/issues/#list-issues
   function issueToString(issue) {
-    var labels = _.reject(issue.labels, function(label) { return workflowLabels.contains(label.name) });
+    var labels = _.reject(issue.labels, function(label) { return _.contains(workflowLabels, label.name) });
     var hashtags = _.map(labels, function(label) { return '#' + label.name; }).sort().join(' ');
     var lastUpdatedAt = moment(issue.closed_at || issue.updated_at);
     var daysSinceUpdated = moment().diff(lastUpdatedAt, 'days');

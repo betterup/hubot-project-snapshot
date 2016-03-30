@@ -23,7 +23,7 @@
 var githubAuthToken = process.env.HUBOT_GITHUB_TOKEN;
 var defaultGithubOrganization = process.env.HUBOT_GITHUB_USER;
 var wipLabel = process.env.HUBOT_GITHUB_WIP_LABEL;
-var reviewLabel = process.env.HUBOT_GITHUB_REVEIW_LABEL;
+var reviewLabel = process.env.HUBOT_GITHUB_REVIEW_LABEL;
 var workflowLabels = (process.env.HUBOT_GITHUB_WORKFLOW_LABELS || '').split(',');
 
 module.exports = function(robot) {

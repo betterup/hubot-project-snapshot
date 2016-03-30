@@ -59,15 +59,7 @@ module.exports = function(robot) {
   function inProgressReport(orgProject, callback) {
     github.get('/repos/' + orgProject + '/issues?filter=all&labels=' + wipLabel + '&sort=updated&direction=asc', function(issues) {
       var issuesWithoutPullRequests = rejectPullRequests(issues);
-      if (issuesWithoutPullRequests.length === 0) {
-        callback('No issues currently in progress for ' + orgProject);
-      } else {
-        var message = 'These issues are currently in progress for ' + orgProject + ':';
-        issuesWithoutPullRequests.forEach(function(issue) {
-          message += "\n* " + issueToString(issue);
-        });
-        callback(message);
-      }
+      printIssues('in progress', issuesWithoutPullRequests, orgProject, callback);
     });
   }
 
@@ -78,20 +70,24 @@ module.exports = function(robot) {
     return date;
   }
 
+  function printIssues(label, issues, orgProject, callback) {
+    if (issues.length === 0) {
+      callback('No ' + label + ' issues were found for ' + orgProject);
+    } else {
+      var message = 'These ' + label + ' issues were found for ' + orgProject + ':';
+      issues.forEach(function(issue) {
+        message += "\n* " + issueToString(issue);
+      });
+      callback(message);
+    }
+  }
+
   // list recently closed issues (in the past week)
   // see https://developer.github.com/v3/issues/#list-issues
   function recentClosedIssuesReport(orgProject, callback) {
     github.get('/repos/' + orgProject + '/issues?filter=all&state=closed&sort=updated&direction=desc&per_page=10&since=' + lastWeek().toISOString(), function(issues) {
       var issuesWithoutPullRequests = rejectPullRequests(issues);
-      if (issuesWithoutPullRequests.length === 0) {
-        callback('No recently closed issues for ' + orgProject);
-      } else {
-        var message = 'These issues were recently closed for ' + orgProject + ':';
-        issuesWithoutPullRequests.forEach(function(issue) {
-          message += "\n* " + issueToString(issue);
-        });
-        callback(message);
-      }
+      printIssues('recently closed', issuesWithoutPullRequests, orgProject, callback);
     });
   }
 
@@ -108,30 +104,14 @@ module.exports = function(robot) {
     });
     github.get('/search/issues?sort=created&order=asc&q=' + queryParts.join(' '), function(results) {
       var issues = results.items;
-      if (issues.length === 0) {
-        callback('No new issues in the inbox for ' + orgProject);
-      } else {
-        var message = 'These are new issues in the inbox for ' + orgProject + ':';
-        issues.forEach(function(issue) {
-          message += "\n* " + issueToString(issue);
-        });
-        callback(message);
-      }
+      printIssues('new issues', issues, orgProject, callback);
     });
   }
 
   // see https://developer.github.com/v3/pulls/#list-pull-requests
   function openPullRequests(orgProject, callback) {
     github.get('/repos/' + orgProject + '/pulls?sort=updated&direction=asc', function(pullRequests) {
-      if (pullRequests.length === 0) {
-        callback('No open pull requests for ' + orgProject);
-      } else {
-        var message = 'Open pull requests for ' + orgProject + ':';
-        pullRequests.forEach(function(issue) {
-          message += "\n* " + issueToString(issue);
-        });
-        callback(message);
-      }
+      printIssues('open pull requests', pullRequests, orgProject, callback);
     });
   }
 

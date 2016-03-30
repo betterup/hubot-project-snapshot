@@ -8,7 +8,8 @@
 // Configuration
 //   HUBOT_GITHUB_TOKEN=your github auth token
 //   HUBOT_GITHUB_USER=default organization for github projects
-//   HUBOT_GITHUB_WIP_LABEL=name of label for work in progress tickets
+//   HUBOT_GITHUB_WIP_LABEL=name of label for work in progress issues
+//   HUBOT_GITHUB_REVIEW_LABEL=name of label for issues in review
 //   HUBOT_GITHUB_WORKFLOW_LABELS=comma separated list of labels used for workflow (ex: Backlog, In Progress)
 //
 // Commands:
@@ -22,7 +23,8 @@
 var githubAuthToken = process.env.HUBOT_GITHUB_TOKEN;
 var defaultGithubOrganization = process.env.HUBOT_GITHUB_USER;
 var wipLabel = process.env.HUBOT_GITHUB_WIP_LABEL;
-var workflowLabels = process.env.HUBOT_GITHUB_WORKFLOW_LABELS;
+var reviewLabel = process.env.HUBOT_GITHUB_REVEIW_LABEL;
+var workflowLabels = (process.env.HUBOT_GITHUB_WORKFLOW_LABELS || '').split(',');
 
 module.exports = function(robot) {
   var github = require('githubot')(robot);
@@ -38,7 +40,7 @@ module.exports = function(robot) {
 
   // see https://developer.github.com/v3/issues/#list-issues
   function issueToString(issue) {
-    var labels = _.reject(issue.labels, function(label) { return label.name == wipLabel });
+    var labels = _.reject(issue.labels, function(label) { return workflowLabels.contains(label.name) });
     var hashtags = _.map(labels, function(label) { return '#' + label.name; }).sort().join(' ');
     var lastUpdatedAt = moment(issue.closed_at || issue.updated_at);
     var daysSinceUpdated = moment().diff(lastUpdatedAt, 'days');
@@ -60,6 +62,14 @@ module.exports = function(robot) {
     github.get('/repos/' + orgProject + '/issues?filter=all&labels=' + wipLabel + '&sort=updated&direction=asc', function(issues) {
       var issuesWithoutPullRequests = rejectPullRequests(issues);
       printIssues('in progress', issuesWithoutPullRequests, orgProject, callback);
+    });
+  }
+
+  // see https://developer.github.com/v3/issues/#list-issues
+  function inReviewReport(orgProject, callback) {
+    github.get('/repos/' + orgProject + '/issues?filter=all&labels=' + reviewLabel + '&sort=updated&direction=asc', function(issues) {
+      var issuesWithoutPullRequests = rejectPullRequests(issues);
+      printIssues('in review', issuesWithoutPullRequests, orgProject, callback);
     });
   }
 
@@ -99,7 +109,7 @@ module.exports = function(robot) {
       'is:open'
     ];
     queryParts.push('repo:' + orgProject);
-    (workflowLabels || '').split(',').forEach(function(label) {
+    workflowLabels.forEach(function(label) {
       queryParts.push('-label:"' + label + '"');
     });
     github.get('/search/issues?sort=created&order=asc&q=' + queryParts.join(' '), function(results) {
@@ -125,12 +135,15 @@ module.exports = function(robot) {
     msg.send('https://waffle.io/' + orgProject);
     recentClosedIssuesReport(orgProject, function(closedIssuesMessage) {
       msg.send(closedIssuesMessage);
-      openPullRequests(orgProject, function(pullRequestsMessage) {
-        msg.send(pullRequestsMessage);
-        inProgressReport(orgProject, function(inProgressMessage) {
-          msg.send(inProgressMessage);
-          inboxIssues(orgProject, function(inboxMessage) {
-            msg.send(inboxMessage);
+      inReviewReport(orgProject, function(inReviewMessage) {
+        msg.send(inReviewMessage);
+        openPullRequests(orgProject, function(pullRequestsMessage) {
+          msg.send(pullRequestsMessage);
+          inProgressReport(orgProject, function(inProgressMessage) {
+            msg.send(inProgressMessage);
+            inboxIssues(orgProject, function(inboxMessage) {
+              msg.send(inboxMessage);
+            });
           });
         });
       });
